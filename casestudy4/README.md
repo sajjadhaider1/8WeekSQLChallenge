@@ -209,7 +209,9 @@ WITH RankedNodes AS (
 		r.region_id as r_id,
 		r.region_name as r_name,
 		DATEDIFF(end_date, start_date) AS days_spent,
-		((ROW_NUMBER() OVER (PARTITION BY r.region_name ORDER BY DATEDIFF(c.end_date, c.start_date))-1)/COUNT(*)
+		((ROW_NUMBER() 
+		    OVER (PARTITION BY r.region_name 
+	        ORDER BY DATEDIFF(c.end_date, c.start_date))-1)/COUNT(*)
 			OVER (PARTITION BY r.region_name))*100 as percentile
 	FROM customer_nodes c join regions r
 	ON r.region_id = c.region_id
@@ -330,14 +332,11 @@ WITH MonthlySummary AS (
         SUM(CASE WHEN txn_type = 'withdrawal' THEN 1 ELSE 0 END) AS withdrawals,
         SUM(CASE WHEN txn_type = 'purchase' THEN 1 ELSE 0 END) AS purchases
     FROM customer_transactions
-    GROUP BY MONTH(tx
-
-n_date), customer_id) 
+    GROUP BY MONTH(txn_date), customer_id) 
 SELECT txn_month, COUNT(customer_id)
 FROM MonthlySummary
 WHERE deposits > 1 AND (withdrawals > 0 OR purchases > 0)
-GROUP BY txn_month
-ORDER BY txn_month;
+GROUP BY txn_month ORDER BY txn_month;
 ```
 
 **OUTPUT:**
@@ -392,6 +391,7 @@ FROM customer_transactions
 GROUP BY 1, 2 ORDER BY 1, 2;
 ```
 **OUTPUT (truncated):**
+
 | customer_id | month | closing_balance |
 |-------------|-------|-----------------|
 | 1           | 1     | 312             |
@@ -404,7 +404,6 @@ GROUP BY 1, 2 ORDER BY 1, 2;
 | 3           | 4     | -729            |
 | 4           | 1     | 848             |
 | 4           | 3     | 655             |
-
 
 
 Let's break down the **SELECT** clause and explore it in detail:
@@ -427,16 +426,30 @@ This question is a little ambiguous, so we assume that it is asking us how many 
 My solution calculates the percentage of customers whose closing balance increased by more than 5% month-on-month. The query employs nested subqueries and window functions to analyze transaction data, compute month-on-month closing balance changes for each customer, and finally determine the percentage of customers with significant balance increases.
 
 ```sql
-SELECT ROUND(SUM((bal - prevbal)/prevbal > 0.05)/COUNT(DISTINCT customer_id)*100, 2) as pct_customers
+SELECT 
+    ROUND(
+        SUM((bal - prevbal)/prevbal > 0.05)/COUNT(DISTINCT customer_id)*100, 2) 
+        as pct_customers
 FROM (
 	SELECT *, 
     LAG(bal) OVER (PARTITION BY customer_id ORDER BY month) as prevbal
-	FROM (SELECT
-			customer_id, MONTH(txn_date) AS month,
-			SUM(SUM(CASE WHEN txn_type='deposit' THEN txn_amount ELSE -txn_amount END)) 
-				OVER (PARTITION BY customer_id ORDER BY MONTH(txn_date) ROWS UNBOUNDED PRECEDING) AS bal,
-			ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY MONTH(txn_date) DESC) AS row_num
-		FROM customer_transactions GROUP BY 1, 2 ORDER BY 1, 2) AS m) AS f
+	FROM (
+	    SELECT
+			customer_id, 
+			MONTH(txn_date) AS month,
+			SUM(
+			    SUM(
+			        CASE WHEN txn_type='deposit' 
+			        THEN txn_amount ELSE -txn_amount END)) 
+		            OVER (PARTITION BY customer_id ORDER BY MONTH(txn_date) 
+                    ROWS UNBOUNDED PRECEDING) AS bal,
+		    ROW_NUMBER() OVER (PARTITION BY customer_id 
+		        ORDER BY MONTH(txn_date) DESC) AS row_num
+        FROM customer_transactions 
+        GROUP BY 1, 2 
+        ORDER BY 1, 2
+        ) AS m
+    ) AS f
 WHERE row_num = 1;
 ```
 **OUTPUT:**
