@@ -82,15 +82,17 @@ This table records all customer transactions: deposits, withdrawals, and purchas
 
 ---
 
-This case study explores the intersection of banking and data storage. Through data analysis and insights, your aim is to optimize operations and enhance customer experience at Data Bank.
-
----
-
 # Solution: Exploring Customer Nodes and Transactions
+
+This case study explores the intersection of banking and data storage. Through data analysis and insights, our aim is to optimize operations and enhance customer experience at Data Bank.
 
 ## A. Customer Nodes Exploration
 
+
+
 ### 1. Unique Nodes Analysis
+
+**Q: How many unique nodes are there on the Data Bank system?**
 
 The first step in understanding Data Bank's infrastructure is to determine the number of unique nodes on the system.
 
@@ -101,7 +103,11 @@ FROM customer_nodes;
 
 This query counts the distinct `node_id` values from the `customer_nodes` table, providing insight into the network's scale.
 
+
+
 ### 2. Nodes per Region
+
+**Q: What is the number of nodes per region?**
 
 To gain regional insights, we analyze the distribution of nodes across different regions.
 
@@ -118,7 +124,11 @@ ORDER BY r.region_id;
 
 By joining the `customer_nodes` and `regions` tables, we identify the number of nodes in each region, facilitating resource allocation planning.
 
+
+
 ### 3. Customer Allocation by Region
+
+**How many customers are allocated to each region?**
 
 Understanding customer distribution across regions is essential for targeted marketing and service optimization.
 
@@ -135,7 +145,11 @@ ORDER BY r.region_id;
 
 This query calculates the count of unique customers allocated to each region, providing insights into regional customer demographics.
 
+
+
 ### 4. Customer Reallocation Analysis
+
+**Q: How many days on average are customers reallocated to a different node?**
 
 Analyzing the frequency of customer reallocation to different nodes sheds light on system dynamics.
 
@@ -147,9 +161,15 @@ WHERE end_date != '99991231';
 
 By computing the average duration between node reallocations, we gauge customer mobility within the system.
 
+
+
 ### 5. Reallocation Days Percentile Analysis by Region
 
-To assess reallocation patterns across regions, we analyze percentile metrics.
+**Q: What is the median, 80th and 95th percentile for this same reallocation days metric for each region?**
+
+
+This SQL query calculates the median, 80th percentile, and 95th percentile for the duration spent in each region by customers. 
+It first calculates the durations spent by customers in each region and their corresponding percentiles using a CTE. Then, it selects the region name along with the median, 80th percentile, and 95th percentile durations for each region. The result is a table with four columns: `region`, `median`, `percentile_80`, and `percentile_95`.
 
 ```sql
 WITH RankedNodes AS (
@@ -157,7 +177,8 @@ WITH RankedNodes AS (
 		r.region_id as r_id,
 		r.region_name as r_name,
 		DATEDIFF(end_date, start_date) AS days_spent,
-		((ROW_NUMBER() OVER (PARTITION BY r.region_name ORDER BY DATEDIFF(c.end_date, c.start_date))-1)/COUNT(*) OVER (PARTITION BY r.region_name))*100 as percentile
+		((ROW_NUMBER() OVER (PARTITION BY r.region_name ORDER BY DATEDIFF(c.end_date, c.start_date))-1)/COUNT(*)
+			OVER (PARTITION BY r.region_name))*100 as percentile
 	FROM customer_nodes c join regions r
 	ON r.region_id = c.region_id
 	WHERE end_date != '99991231'
@@ -171,11 +192,32 @@ FROM RankedNodes
 GROUP BY r_name;
 ```
 
-This query calculates the median, 80th, and 95th percentiles of reallocation days for each region, aiding in regional performance evaluation.
+Let's dive further into each part of this SQL query: 
+
+1. **Common Table Expression (CTE)**:
+   - `RankedNodes`: This CTE calculates the duration spent (`days_spent`) by customers in each region. It also assigns a percentile value to each row based on the relative position of the row within its region's duration distribution.
+
+2. **SELECT Clause**:
+   - `r_name as region`: This selects the region name from the CTE and aliases it as `region`.
+   - `MIN(CASE WHEN percentile >= 50 THEN days_spent END) AS median`: This expression calculates the median by finding the minimum value of `days_spent` where the percentile is greater than or equal to 50.
+   - `MIN(CASE WHEN percentile >= 80 THEN days_spent END) AS percentile_80`: This expression calculates the 80th percentile by finding the minimum value of `days_spent` where the percentile is greater than or equal to 80.
+   - `MIN(CASE WHEN percentile >= 95 THEN days_spent END) AS percentile_95`: This expression calculates the 95th percentile by finding the minimum value of `days_spent` where the percentile is greater than or equal to 95.
+
+3. **FROM Clause**:
+   - `RankedNodes`: This is the CTE we defined earlier, which contains the calculated durations and percentiles for each region.
+
+4. **GROUP BY Clause**:
+   - `GROUP BY r_name`: This groups the results by region name.
+
+
 
 ## B. Customer Transactions Analysis
 
+
+
 ### 1. Transaction Type Summary
+
+**Q: What is the unique count and total amount for each transaction type?**
 
 Understanding transaction types and their volumes is crucial for business insights.
 
@@ -192,6 +234,8 @@ ORDER BY 2;
 This query summarizes transaction types by count and total amount, providing insights into customer behavior.
 
 ### 2. Historical Deposit Analysis
+
+**Q: What is the average total historical deposit counts and amounts for all customers?**
 
 Analyzing historical deposit counts and amounts aids in understanding customer saving behaviors.
 
@@ -210,7 +254,11 @@ By computing the average deposit counts and amounts, we gain insights into custo
 
 ### 3. Monthly Transaction Analysis
 
-Analyzing monthly transactions helps identify patterns and customer behavior trends.
+**Q: For each month - how many Data Bank customers make more than 1 deposit and either 1 purchase or 1 withdrawal in a single month?**
+
+The question asks us to analyze customer behavior in terms of their transaction patterns, specifically focusing on months where customers made more than one deposit and either a purchase or a withdrawal. 
+
+The query first calculates a summary of customer transactions by month using a CTE. Then, it filters for months where customers made more than one deposit and either a withdrawal or a purchase. Finally, it counts the number of distinct customers meeting these criteria for each month and presents the results ordered by month.
 
 ```sql
 WITH MonthlySummary AS (
@@ -231,11 +279,35 @@ GROUP BY txn_month
 ORDER BY txn_month;
 ```
 
-This query identifies months where customers made multiple deposits and either a purchase or a withdrawal, providing insights into transaction frequency.
+Let's break down the query:
+
+1. **Common Table Expression (CTE)**:
+   - `MonthlySummary`: This CTE calculates a summary of customer transactions aggregated by month (`txn_month`) and `customer_id`. It counts the number of deposits, withdrawals, and purchases made by each customer in each month.
+
+2. **SELECT Clause**:
+   - `txn_month`: This selects the month of the transactions from the `MonthlySummary` CTE.
+   - `COUNT(customer_id)`: This counts the number of distinct customers who meet the specified conditions in each month.
+  
+3. **FROM Clause**:
+   - `MonthlySummary`: This is the CTE we defined earlier, which contains the aggregated summary of customer transactions by month and customer.
+
+4. **WHERE Clause**:
+   - `deposits > 1`: This condition filters for months where customers made more than one deposit.
+   - `(withdrawals > 0 OR purchases > 0)`: This condition filters for months where customers made either a withdrawal or a purchase.
+
+5. **GROUP BY Clause**:
+   - `GROUP BY txn_month`: This groups the results by month, aggregating the counts of customers meeting the specified conditions for each month.
+
+6. **ORDER BY Clause**:
+   - `ORDER BY txn_month`: This orders the results by month in ascending order.
+
+
 
 ### 4. Monthly Closing Balance Analysis
 
-Analyzing monthly closing balances provides insights into customer financial health.
+**Q: What is the closing balance for each customer at the end of the month?**
+
+This SQL query calculates the closing balance for each customer at the end of each month. It utilizes window functions to compute the cumulative sum of transaction amounts for each customer, ordered by month. This effectively calculates the closing balance for each customer at the end of each month based on their transaction history. The result is a table with three columns: `customer_id`, `month`, and `closing_balance`.
 
 ```sql
 SELECT
@@ -248,12 +320,24 @@ SELECT
 FROM customer_transactions
 GROUP BY 1, 2 ORDER BY 1, 2;
 ```
+Let's break down the **SELECT** clause:
+
+**SELECT Clause**:
+   - `customer_id`: This column selects the unique identifier of each customer.
+   - `MONTH(txn_date) AS month`: This expression extracts the month component from the `txn_date` column and aliases it as `month`.
+   - `SUM(SUM(CASE WHEN txn_type='deposit' THEN txn_amount ELSE -txn_amount END))`: This part is a bit complex:
+     - The inner `CASE` statement categorizes transactions as deposits or withdrawals/purchases, with deposits being summed positively and withdrawals/purchases being summed negatively.
+     - The outer `SUM` function then aggregates the transaction amounts for each customer and month.
+   - `OVER (PARTITION BY customer_id ORDER BY MONTH(txn_date) ROWS UNBOUNDED PRECEDING)`: This window function calculates the cumulative sum of transaction amounts for each customer, ordered by month, starting from the beginning of the partition (i.e., from the first month).
 
 By computing closing balances, we track changes in customer financial positions over time.
 
 ### 5. Percentage of Customers with Increased Closing Balance
 
-Analyzing the percentage of customers with increased closing balances aids in assessing financial growth.
+**Q: What is the percentage of customers who increase their closing balance by more than 5%?**
+
+This question is a little ambiguous, so we assume that it is asking us how many customers increased their closing balance at the end of their last month by 5% compared to the previous month. 
+My solution calculates the percentage of customers whose closing balance increased by more than 5% month-on-month. The query employs nested subqueries and window functions to analyze transaction data, compute month-on-month closing balance changes for each customer, and finally determine the percentage of customers with significant balance increases.
 
 ```sql
 SELECT ROUND(SUM((bal - prevbal)/prevbal > 0.05)/COUNT(DISTINCT customer_id)*100, 2) as pct_customers
@@ -269,4 +353,24 @@ FROM (
 WHERE row_num = 1;
 ```
 
-This query computes the percentage of customers with closing balance increases exceeding 5%, providing insights into financial growth trends.
+Let's break down the query step by step:
+
+1. **Subquery (m)**:
+   - The innermost subquery (m) retrieves data from the `customer_transactions` table and aggregates it by `customer_id` and `MONTH(txn_date)` (representing the month).
+   - Within this subquery:
+     - The `SUM(CASE WHEN txn_type='deposit' THEN txn_amount ELSE -txn_amount END)` calculates the net transaction amount for each customer in each month. It sums the deposit amounts and subtracts withdrawal amounts.
+     - The `ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY MONTH(txn_date) DESC)` assigns a row number to each record within each customer partition, ordered by the month in descending order.
+
+2. **Window Function (LAG)**:
+   - The `LAG(bal) OVER (PARTITION BY customer_id ORDER BY month)` window function retrieves the previous month's closing balance (`bal`) for each customer. It helps to compare the current month's closing balance with the previous month's.
+
+3. **Outer Subquery (f)**:
+   - The outer subquery (f) references the results from subquery (m).
+   - It calculates the percentage of customers whose closing balance increased by more than 5% month-on-month.
+   - The expression `(bal - prevbal)/prevbal` computes the percentage change in closing balance compared to the previous month.
+   - The `SUM((bal - prevbal)/prevbal > 0.05)` sums the occurrences where the percentage change is greater than 5%.
+   - `COUNT(DISTINCT customer_id)` counts the total number of distinct customers.
+   - `(SUM((bal - prevbal)/prevbal > 0.05) / COUNT(DISTINCT customer_id)) * 100` calculates the percentage of customers with a closing balance increase exceeding 5%.
+
+4. **Outer Query**:
+   - The outer query simply rounds the calculated percentage to two decimal places using the `ROUND` function and aliases it as `pct_customers`.
