@@ -1,9 +1,9 @@
 # 8WeekSQLChallenge
-My attempts at the case studies provided by [8weeksqlchallenge.com](8weeksqlchallenge.com).
+My attempts at the case studies provided by [#8WeekSQLChallenge](8weeksqlchallenge.com).
 
 Solutions to each of the 8 case studies will be uploaded in their respective folders in the repo as I attempt them.
 
-### The original case studies can be found below on the #8WeekSQLChallenge website:
+### The original case studies and links to my solutions can be found below:
 
 * [Case Study #1 - Danny's Diner](https://8weeksqlchallenge.com/case-study-1/)
 * [Case Study #2 - Pizza Runner](https://8weeksqlchallenge.com/case-study-1/)
