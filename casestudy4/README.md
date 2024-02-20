@@ -103,6 +103,12 @@ FROM customer_nodes;
 
 This query counts the distinct `node_id` values from the `customer_nodes` table, providing insight into the network's scale.
 
+**OUTPUT:**
+
+| unique_nodes |
+|--------------|
+| 5            |
+
 
 
 ### 2. Nodes per Region
@@ -123,6 +129,16 @@ ORDER BY r.region_id;
 ```
 
 By joining the `customer_nodes` and `regions` tables, we identify the number of nodes in each region, facilitating resource allocation planning.
+
+**OUTPUT:**
+
+| region_id | region_name | nodes |
+|-----------|-------------|-------|
+| 1         | Australia   | 770   |
+| 2         | America     | 735   |
+| 3         | Africa      | 714   |
+| 4         | Asia        | 665   |
+| 5         | Europe      | 616   |
 
 
 
@@ -145,6 +161,16 @@ ORDER BY r.region_id;
 
 This query calculates the count of unique customers allocated to each region, providing insights into regional customer demographics.
 
+**OUTPUT:**
+
+| region_id | region_name | customers |
+|-----------|-------------|-----------|
+| 1         | Australia   | 110       |
+| 2         | America     | 105       |
+| 3         | Africa      | 102       |
+| 4         | Asia        | 95        |
+| 5         | Europe      | 88        |
+
 
 
 ### 4. Customer Reallocation Analysis
@@ -160,6 +186,12 @@ WHERE end_date != '99991231';
 ```
 
 By computing the average duration between node reallocations, we gauge customer mobility within the system.
+
+**OUTPUT:**
+
+| avg_days |
+|----------|
+| 14.634   |
 
 
 
@@ -191,8 +223,19 @@ SELECT
 FROM RankedNodes
 GROUP BY r_name;
 ```
+**OUTPUT:**
 
-Let's dive further into each part of this SQL query: 
+| region    | median | percentile_80 | percentile_95 |
+|-----------|--------|---------------|---------------|
+| Africa    | 15     | 24            | 28            |
+| America   | 15     | 23            | 28            |
+| Asia      | 15     | 23            | 28            |
+| Australia | 15     | 23            | 28            |
+| Europe    | 15     | 24            | 28            |
+
+
+
+Let's dive further into each part of the SQL query: 
 
 1. **Common Table Expression (CTE)**:
    - `RankedNodes`: This CTE calculates the duration spent (`days_spent`) by customers in each region. It also assigns a percentile value to each row based on the relative position of the row within its region's duration distribution.
@@ -233,6 +276,16 @@ ORDER BY 2;
 
 This query summarizes transaction types by count and total amount, providing insights into customer behavior.
 
+**OUTPUT:**
+
+| txn_type   | count | amount  |
+|------------|-------|---------|
+| withdrawal | 1580  | 793003  |
+| purchase   | 1617  | 806537  |
+| deposit    | 2671  | 1359168 |
+
+
+
 ### 2. Historical Deposit Analysis
 
 **Q: What is the average total historical deposit counts and amounts for all customers?**
@@ -251,6 +304,14 @@ FROM
 ```
 
 By computing the average deposit counts and amounts, we gain insights into customer saving trends.
+
+**OUTPUT:**
+
+| avg_count | avg_amount |
+|-----------|------------|
+| 5.342     | 2718.336   |
+
+
 
 ### 3. Monthly Transaction Analysis
 
@@ -278,6 +339,16 @@ WHERE deposits > 1 AND (withdrawals > 0 OR purchases > 0)
 GROUP BY txn_month
 ORDER BY txn_month;
 ```
+
+**OUTPUT:**
+
+| txn_month | COUNT(customer_id) |
+|-----------|--------------------|
+| 1         | 168                |
+| 2         | 181                |
+| 3         | 192                |
+| 4         | 70                 |
+
 
 Let's break down the query:
 
@@ -320,7 +391,23 @@ SELECT
 FROM customer_transactions
 GROUP BY 1, 2 ORDER BY 1, 2;
 ```
-Let's break down the **SELECT** clause:
+**OUTPUT (truncated):**
+| customer_id | month | closing_balance |
+|-------------|-------|-----------------|
+| 1           | 1     | 312             |
+| 1           | 3     | -640            |
+| 2           | 1     | 549             |
+| 2           | 3     | 610             |
+| 3           | 1     | 144             |
+| 3           | 2     | -821            |
+| 3           | 3     | -1222           |
+| 3           | 4     | -729            |
+| 4           | 1     | 848             |
+| 4           | 3     | 655             |
+
+
+
+Let's break down the **SELECT** clause and explore it in detail:
 
 **SELECT Clause**:
    - `customer_id`: This column selects the unique identifier of each customer.
@@ -352,6 +439,12 @@ FROM (
 		FROM customer_transactions GROUP BY 1, 2 ORDER BY 1, 2) AS m) AS f
 WHERE row_num = 1;
 ```
+**OUTPUT:**
+
+| pct_customers |
+|---------------|
+| 46.4          |
+
 
 Let's break down the query step by step:
 
