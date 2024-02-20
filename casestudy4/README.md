@@ -431,8 +431,9 @@ SELECT
         SUM((bal - prevbal)/prevbal > 0.05)/COUNT(DISTINCT customer_id)*100, 2) 
         as pct_customers
 FROM (
-	SELECT *, 
-    LAG(bal) OVER (PARTITION BY customer_id ORDER BY month) as prevbal
+	SELECT
+	    *, 
+	    LAG(bal) OVER (PARTITION BY customer_id ORDER BY month) as prevbal
 	FROM (
 	    SELECT
 			customer_id, 
