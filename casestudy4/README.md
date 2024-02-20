@@ -270,7 +270,3 @@ WHERE row_num = 1;
 ```
 
 This query computes the percentage of customers with closing balance increases exceeding 5%, providing insights into financial growth trends.
-
----
-
-The above SQL queries analyze customer nodes and transactions for Data Bank, offering valuable insights for strategic decision-making and business optimization.
