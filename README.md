@@ -9,6 +9,7 @@ Solutions to each of the 8 case studies will be uploaded in their respective fol
 * [Case Study #2 - Pizza Runner](https://8weeksqlchallenge.com/case-study-1/)
 * [Case Study #3 - Foodie-Fi](https://8weeksqlchallenge.com/case-study-1/)
 * [Case Study #4 - Data Bank](https://8weeksqlchallenge.com/case-study-1/)
+  * [My solution](https://github.com/sajjadhaider1/8WeekSQLChallenge/tree/main/casestudy4)
 * [Case Study #5 - Data Mart](https://8weeksqlchallenge.com/case-study-1/)
 * [Case Study #6 - Clique Bait](https://8weeksqlchallenge.com/case-study-1/)
 * [Case Study #7 - Balanced Tree Clothing Co.](https://8weeksqlchallenge.com/case-study-1/)
